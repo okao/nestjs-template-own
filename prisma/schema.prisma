@@ -3,6 +3,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  // output = "../src/lib/db/client"
 }
 
 datasource db {
@@ -12,10 +13,124 @@ datasource db {
 
 model SiteSetting {
   id        BigInt   @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
   name      String   @unique
   value     String
-
+  active    Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   @@map("siteSettings")
+}
+
+// model Client {
+//   id        String @id @default(uuid()) @unique
+//   name      String   @unique
+//   description String?
+//   active    Boolean @default(true)
+//   clientSecret String
+//   redirectUri String
+//   logo      String? //url to logo
+
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+
+//   //make client secret an index
+//   @@index([clientSecret], name: "clientSecret")
+//   @@map("clients")
+// }
+
+
+model Role {
+  id          Int   @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  defaultType Boolean @default(false)
+  active      Boolean @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users User[]
+  @@map("roles")
+}
+
+model Status {
+  id        Int   @id @default(autoincrement())
+  name      String   @unique
+  description String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users User[]
+  @@map("statuses")
+}
+model AuthProvider {
+  id        Int   @id @default(autoincrement())
+  name      String   @unique
+  active    Boolean @default(true)
+  description String?
+
+  loginUrl  String?
+  apiUrl    String?
+  logo      String? //url to logo
+
+  //developer settings
+  clientId     String?
+  clientSecret String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users UserAuthProvider[]
+
+  @@map("authProviders")
+}
+
+model User {
+  id                    String @id @default(uuid())
+  email                 String? @unique
+  username              String? @unique
+  password              String?
+  statusId              Int @default(1)
+  roleId                Int @default(1)
+  defaultAuthProviderId Int @default(1)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  status                Status @relation(fields: [statusId], references: [id])
+  role                  Role @relation(fields: [roleId], references: [id])
+  sessions              Session[]
+  authProviders         UserAuthProvider[]
+
+  @@map("users")
+}
+
+model UserAuthProvider {
+  authId String @id @default(uuid()) @unique
+  userId String
+  authProviderId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+  authProvider AuthProvider @relation(fields: [authProviderId], references: [id])
+
+  @@map("userAuthProviders")
+}
+
+model Session {
+  id BigInt @id @default(autoincrement())
+  userId String
+  hashedSessionToken String?
+  antiCSRFToken String?
+  publicData String?
+  privateData String?
+  userAgent String?
+  ip String?
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("userSessions")
 }

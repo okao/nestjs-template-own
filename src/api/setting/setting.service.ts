@@ -7,7 +7,7 @@ import { Cache } from 'cache-manager';
 export class SettingService {
   constructor(
     private prisma: PrismaService,
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    // @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   async getSettings() {
@@ -21,22 +21,20 @@ export class SettingService {
       },
     });
 
-    console.log('settings: ', settings);
     return settings;
   }
 
   async testNotmalCache() {
-    const cachedData = await this.cacheManager.get('github_data');
-    console.log('cachedData: ', cachedData);
-    if (cachedData) {
-      return cachedData;
-    }
+    // const cachedData = await this.cacheManager.get('github_data');
+    // console.log('cachedData: ', cachedData);
+    // if (cachedData) {
+    //   return cachedData;
+    // }
 
     const response = await fetch('https://api.github.com/users/okao');
     const data = await response.json();
 
-    const cached = await this.cacheManager.set('github_data', data);
-    console.log('cached: ', cached);
+    // await this.cacheManager.set('github_data', data);
 
     //sleep for 3 seconds
     await new Promise((resolve) => setTimeout(resolve, 3000));

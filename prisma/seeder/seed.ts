@@ -1,9 +1,18 @@
-import { PrismaClient } from '@prisma/client';
+import { AuthProvider, PrismaClient, Role } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
+// import { PrismaClient } from '../../src/lib/db/client';
 
 // initialize Prisma Client
 const prisma = new PrismaClient();
+const saltRounds = 10;
 
 async function main() {
+  // const emailClientSecret = await bcrypt('eZd8eHpfQ4s6az-0/^v2aHTP:nc|tc', saltRounds).then((hash) => hash);
+  const emailClientSecret = await bcrypt.hash(
+    'eZd8eHpfQ4s6az-0/^v2aHTP:nc|tc',
+    saltRounds,
+  );
+  const userPassword = await bcrypt.hash('welcome', saltRounds);
   // create dummy data
   const settings = await prisma.siteSetting.createMany({
     data: [
@@ -107,7 +116,127 @@ async function main() {
     skipDuplicates: true,
   });
 
-  console.log({ settings });
+  //seed roles
+  const rolTypes = [
+    {
+      name: 'user',
+      defaultType: true,
+      description: 'User Role',
+      active: true,
+    },
+    {
+      name: 'admin',
+      defaultType: false,
+      description: 'Admin Role',
+      active: true,
+    },
+  ] as Role[];
+
+  const roles = await prisma.role.createMany({
+    data: rolTypes,
+    skipDuplicates: true,
+  });
+
+  const statusTypes = [
+    {
+      name: 'active',
+      description: 'Active Status',
+    },
+    {
+      name: 'inactive',
+      description: 'Inactive Status',
+    },
+    {
+      name: 'deleted',
+      description: 'Deleted Status',
+    },
+    {
+      name: 'banned',
+      description: 'Banned Status',
+    },
+    {
+      name: 'pending',
+      description: 'Pending Status',
+    },
+    {
+      name: 'draft',
+      description: 'Draft Status',
+    },
+  ];
+
+  const statuses = await prisma.status.createMany({
+    data: statusTypes,
+    skipDuplicates: true,
+  });
+
+  //authProviders
+  const authProviderTypes = [
+    {
+      name: 'email',
+      description: 'Email Auth Provider',
+      loginUrl: 'http://localhost:3000/auth/login',
+
+      clientId: '018c6c56-f728-71ab-aa96-00a0f572de12',
+      clientSecret: emailClientSecret,
+    },
+    {
+      name: 'facebook',
+      description: 'Facebook Auth Provider',
+      loginUrl: 'https://www.facebook.com',
+    },
+    {
+      name: 'google',
+      description: 'Google Auth Provider',
+      loginUrl: 'https://accounts.google.com/v3/signin',
+    },
+    {
+      name: 'x',
+      description: 'X-(Twitter) Auth Provider',
+      loginUrl: 'https://www.twitter.com',
+    },
+    {
+      name: 'github',
+      description: 'Github Auth Provider',
+      loginUrl: 'https://github.com/login',
+    },
+    {
+      name: 'linkedin',
+      description: 'Linkedin Auth Provider',
+      loginUrl: 'https://www.linkedin.com/login',
+    },
+  ] as AuthProvider[];
+
+  const authProviders = await prisma.authProvider.createMany({
+    data: authProviderTypes,
+    skipDuplicates: true,
+  });
+
+  //default user
+  const users = await prisma.user.create({
+    data: {
+      username: 'okao',
+      email: 'hamzathanees@gmail.com',
+      password: userPassword,
+      status: {
+        connect: {
+          name: 'active',
+        },
+      },
+      role: {
+        connect: {
+          name: 'admin',
+        },
+      },
+    },
+  });
+
+  console.log({
+    settings: settings.count,
+    roles: roles.count,
+    statuses: statuses.count,
+    authProviders: authProviders.count,
+    user: users,
+  });
 }
 
 main()

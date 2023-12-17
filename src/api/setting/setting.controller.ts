@@ -1,13 +1,14 @@
 import { Controller, Get, UseInterceptors } from '@nestjs/common';
 import { SettingService } from './setting.service';
-import { CacheInterceptor, CacheKey, CacheTTL } from '@nestjs/cache-manager';
-import { ApiCreatedResponse, ApiHeader } from '@nestjs/swagger';
+// import { CacheInterceptor, CacheKey, CacheTTL } from '@nestjs/cache-manager';
+import { ApiCreatedResponse, ApiHeader, ApiTags } from '@nestjs/swagger';
 import { SiteSetting } from '../dashboard/classes';
 
 @ApiHeader({
   name: 'Setting API',
   description: 'The setting API description',
 })
+@ApiTags('settings')
 @Controller('setting')
 export class SettingController {
   constructor(private readonly settingService: SettingService) {}
@@ -38,9 +39,9 @@ export class SettingController {
   }
 
   @Get('/test-cache-interceptor')
-  @UseInterceptors(CacheInterceptor)
-  @CacheKey('github_data') // override default cache key
-  @CacheTTL(60000) // override default TTL value
+  // @UseInterceptors(CacheInterceptor)
+  // @CacheKey('github_data') // override default cache key
+  // @CacheTTL(60000) // override default TTL value
   async testCacheInterceptor(): Promise<any> {
     //logi to check request time taken
     const start = Date.now();

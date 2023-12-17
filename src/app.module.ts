@@ -6,16 +6,31 @@ import configuration from './config/configuration';
 import { RouterModule } from '@nestjs/core';
 import { CacheModule } from '@nestjs/cache-manager';
 import { GatewayModule } from './ws-gateway/gateway/gateway.module';
+// import * as redisStore from 'cache-manager-redis-store';
 import * as redisStore from 'cache-manager-redis-store';
+import { AuthModule } from './api/auth/auth.module';
+import { JwtModule } from '@nestjs/jwt';
+import { UserModule } from './api/user/user.module';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+import { PrismaModule } from './service_modules/prisma/prisma.module';
+// import { RedisCacheModule } from './redis-cache/redis-cache.module';
+// import { forwardRef } from '@nestjs/common';
 
 @Module({
   imports: [
+    ThrottlerModule.forRoot(),
+    JwtModule.register({
+      global: true,
+    }),
+    PrismaModule,
     // CacheModule.register({
     //   isGlobal: true,
     //   store: redisStore,
     //   host: process.env.REDIS_HOST,
     //   port: process.env.REDIS_PORT,
     // }),
+    // RedisCacheModule,
     CacheModule.registerAsync({
       isGlobal: true,
       imports: [ConfigModule],
@@ -32,8 +47,6 @@ import * as redisStore from 'cache-manager-redis-store';
       isGlobal: true,
       load: [configuration],
     }),
-    DashboardModule,
-    SettingModule,
     RouterModule.register([
       {
         path: 'dashboard',
@@ -46,6 +59,10 @@ import * as redisStore from 'cache-manager-redis-store';
         ],
       },
     ]),
+    UserModule,
+    AuthModule,
+    DashboardModule,
+    SettingModule,
     GatewayModule,
   ],
   controllers: [],

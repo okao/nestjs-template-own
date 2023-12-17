@@ -1,10 +1,9 @@
 import { WebSocketGateway } from '@nestjs/websockets';
 
-@WebSocketGateway(8080, {
+@WebSocketGateway(parseInt(process.env.WS_PORT), {
   cors: {
     origin: '*',
     methods: ['GET', 'POST'],
   },
-  // transports: ['websocket'],
 })
 export class Gateway {}
