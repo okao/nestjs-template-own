@@ -71,6 +71,7 @@ export class AccessTokenGuard extends AuthGuard('jwt') {
           },
           include: {
             status: true,
+            role: true,
           },
         })
         .then((user) => {
@@ -87,6 +88,10 @@ export class AccessTokenGuard extends AuthGuard('jwt') {
           delete user.defaultAuthProviderId;
           delete user.createdAt;
           delete user.updatedAt;
+          delete user.role.createdAt;
+          delete user.role.updatedAt;
+          delete user.role.id;
+          delete user.role.defaultType;
 
           NewUser = user;
 

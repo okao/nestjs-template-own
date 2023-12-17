@@ -18,9 +18,9 @@ export default () => ({
     origin: process.env.CORS_ORIGIN || '*',
   },
   auth: {
-    accessTokenExpiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN || '15m',
+    accessTokenExpiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN || '5m',
     accessTokenSecret: process.env.ACCESS_TOKEN_SECRET || 'access-token-secret',
-    refreshTokenExpiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || '30d',
+    refreshTokenExpiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || '1d',
     refreshTokenSecret:
       process.env.REFRESH_TOKEN_SECRET || 'refresh-token-secret',
     emailVerificationTokenExpiresIn:

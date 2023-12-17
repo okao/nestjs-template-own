@@ -2,7 +2,7 @@ import { ConfigService } from '@nestjs/config';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { PrismaService } from 'src/service_modules/prisma/prisma.service';
 import { Cache } from 'cache-manager';
-import { SignIn } from './classes/auth';
+import { SignIn } from '../../dtos/auth';
 import {
   HttpException,
   HttpStatus,
@@ -92,83 +92,52 @@ export class AuthService {
   };
 
   async refreshToken(userId: string, refreshTokenString: string) {
-    const user = await this.prisma.user.findFirst({
-      where: {
-        id: userId,
-      },
-    });
-
-    if (!user) {
-      throw new HttpException(
-        {
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            email: 'notFound',
-          },
+    try {
+      const user = await this.prisma.user.findFirst({
+        where: {
+          id: userId,
         },
-        HttpStatus.UNPROCESSABLE_ENTITY,
-      );
-    }
-
-    // const isValidRefreshToken = await bcrypt.compare(
-    //   refreshToken,
-    //   user.refreshToken,
-    // );
-    //get the refresh token from cache and compare it with the refresh token from the request
-    // const cachedRefreshToken = await this.cacheManager.get<string>(
-    //   `refreshToken:${user?.id}`,
-    // );
-
-    // const cachedRefreshToken = await this.redisCacheService.get(
-    //   `refreshToken:${user?.id}`,
-    // );
-
-    // if (!cachedRefreshToken) {
-    //   throw new UnauthorizedException();
-    // }
-
-    // console.log('cachedRefreshToken: ', cachedRefreshToken);
-    // console.log('refreshTokenString: ', refreshTokenString);
-
-    // //check if both refresh tokens are the same
-    // if (cachedRefreshToken !== refreshTokenString) {
-    //   throw new UnauthorizedException();
-    // }
-    // const isValidRefreshToken = await bcrypt.compare(
-    //   refreshToken,
-    //   cachedRefreshToken,
-    // );
-
-    // if (!isValidRefreshToken) {
-    //   throw new UnauthorizedException();
-    // }
-    const { token, refreshToken, tokenExpiresIn, refreshTokenExpiresIn } =
-      await this.getTokensData({
-        id: user?.id,
       });
 
-    //delete the refresh token from cache
-    // await this.cacheManager.del(`refreshToken:${user?.id}`);
+      if (!user) {
+        throw new HttpException(
+          {
+            status: HttpStatus.UNPROCESSABLE_ENTITY,
+            errors: {
+              email: 'notFound',
+            },
+          },
+          HttpStatus.UNPROCESSABLE_ENTITY,
+        );
+      }
 
-    //save the refresh token in cache
-    // await this.cacheManager.set(
-    //   `refreshToken:${user?.id}`,
-    //   refreshToken,
-    //   this.convertToSeconds(refreshTokenExpiresIn),
-    // );
+      //using nest jwt verify refresh token
+      const decoded = await this.jwtService.verifyAsync(refreshTokenString, {
+        secret: this.configService.get<string>('auth.refreshTokenSecret', {
+          infer: true,
+        }),
+      });
 
-    const passedUser: { id: string; username: string; email: string } = {
-      id: user?.id,
-      username: user?.username,
-      email: user?.email,
-    };
+      const { token, refreshToken, tokenExpiresIn, refreshTokenExpiresIn } =
+        await this.getTokensData({
+          id: user?.id,
+        });
 
-    return {
-      token,
-      refreshToken,
-      tokenExpiresIn,
-      user: passedUser,
-    };
+      const passedUser: { id: string; username: string; email: string } = {
+        id: user?.id,
+        username: user?.username,
+        email: user?.email,
+      };
+
+      return {
+        token,
+        refreshToken,
+        tokenExpiresIn,
+        user: passedUser,
+      };
+    } catch (error) {
+      throw new UnauthorizedException('Unauthorized');
+    }
   }
 
   logout = async (id: string, accessToken: string): Promise<boolean> => {
@@ -262,6 +231,9 @@ export class AuthService {
     //   refreshToken,
     //   refreshTokenExpiresInMilliSeconds,
     // );
+
+    console.log('refreshToken: ', refreshToken);
+    console.log('refreshTokenExpiresIn: ', refreshTokenExpiresIn);
 
     return {
       token,

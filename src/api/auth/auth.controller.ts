@@ -20,7 +20,7 @@ import {
   ApiProperty,
   ApiTags,
 } from '@nestjs/swagger';
-import { RefreshTokenType, SignIn } from './classes/auth';
+import { RefreshTokenType, SignIn } from '../../dtos/auth';
 import { User } from '@prisma/client';
 import { AccessTokenGuard } from './guards/accessToken.guard';
 import { IncomingHttpHeaders } from 'http2';
@@ -100,7 +100,6 @@ export class AuthController {
         req?.user?.id,
         refreshToken.refreshToken,
       );
-      console.log('refresh: ', refresh);
       return refresh;
     } catch (error) {
       throw new HttpException(

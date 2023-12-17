@@ -11,7 +11,6 @@ import {
 } from '@nestjs/common';
 import validationOptions from './utils/validation-options';
 import helmet from 'helmet';
-import compression from 'compression';
 import { LoggingInterceptor } from './libs/LoggingInterceptor';
 import { HttpExceptionFilter } from './libs/HttpExceptionFilter';
 import { InterceptorRequestAssociateNeededTsInterceptor } from './interceptors/interceptor_request_associate_needed.ts.interceptor';
@@ -37,9 +36,9 @@ async function bootstrap() {
     app.useGlobalInterceptors(
       new ClassSerializerInterceptor(app.get(Reflector)),
     );
-    app.useGlobalInterceptors(
-      new InterceptorRequestAssociateNeededTsInterceptor(),
-    );
+    // app.useGlobalInterceptors(
+    //   new InterceptorRequestAssociateNeededTsInterceptor(),
+    // );
 
     // Helmet
     app.use(
@@ -57,24 +56,19 @@ async function bootstrap() {
 
     // app.use(compression());
     app.useGlobalInterceptors(new LoggingInterceptor());
-    app.useGlobalFilters(new HttpExceptionFilter());
+    // app.useGlobalFilters(new HttpExceptionFilter());
 
     // Swagger
     const config = new DocumentBuilder()
-      .setTitle('Oevaru API V1.0')
-      .setDescription('Travel and Tourism API')
+      .setTitle('Andy API V1.0')
+      .setDescription('Andy APi')
       .setVersion('1.0')
       .addBearerAuth()
       .build();
     const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('oevaru/v1', app, document, {
-      customSiteTitle: 'Oevaru API',
+    SwaggerModule.setup('andy/v1', app, document, {
+      customSiteTitle: 'ANDY API',
     });
-
-    console.log(
-      'configService.getOrThrow: ',
-      configService.getOrThrow('port', { infer: true }),
-    );
 
     await app.listen(configService.getOrThrow('port', { infer: true }) || 3000);
   } catch (error) {

@@ -14,16 +14,39 @@ import { UserModule } from './api/user/user.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { PrismaModule } from './service_modules/prisma/prisma.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { BullModule } from '@nestjs/bull';
 // import { RedisCacheModule } from './redis-cache/redis-cache.module';
 // import { forwardRef } from '@nestjs/common';
 
 @Module({
   imports: [
-    ThrottlerModule.forRoot(),
+    ThrottlerModule.forRoot([
+      {
+        name: 'auth',
+        ttl: 60,
+        limit: 10,
+      },
+    ]),
     JwtModule.register({
       global: true,
     }),
+    //for Queing jobs
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        global: true,
+        redis: {
+          host: await configService.get('redis.host'),
+          port: await configService.get('redis.port'),
+        },
+      }),
+      inject: [ConfigService],
+    }),
     PrismaModule,
+    ScheduleModule.forRoot(),
+    EventEmitterModule.forRoot(),
     // CacheModule.register({
     //   isGlobal: true,
     //   store: redisStore,

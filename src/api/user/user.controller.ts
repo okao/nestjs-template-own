@@ -1,18 +1,30 @@
 import {
+  Body,
   Controller,
   Get,
   HttpException,
-  Req,
+  Inject,
+  Post,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
-// import { AuthGuard } from '@nestjs/passport';
 import { User } from '@prisma/client';
-import { ApiHeader, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { AccessTokenGuard } from 'src/api/auth/guards/accessToken.guard';
 import { UserService } from './user.service';
 import { AuthUser } from 'src/decorators/auth-user.decorator';
-import { UserResponse } from './class/response.class';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiCreatedResponse,
+  ApiHeader,
+  ApiTags,
+} from '@nestjs/swagger';
+import { CreateUser } from '../../dtos/user.dto';
+import { PrismaService } from 'src/service_modules/prisma/prisma.service';
+import { RolesDecorator } from 'src/decorators/roles.decorator';
+import { RolesEnum } from '../../dtos/user_and_role.enum';
+import { AccessTokenGuard } from 'src/api/auth/guards/accessToken.guard';
+import { RoleGuard } from '../auth/guards/roles.guard';
+import { OnEvent } from '@nestjs/event-emitter';
+import { UserCreatedEvent } from 'src/events/user-created.event';
 
 @ApiHeader({
   name: 'User API',
@@ -22,7 +34,10 @@ import { UserResponse } from './class/response.class';
 @ApiBearerAuth()
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   @Get('/me')
   @UseGuards(AccessTokenGuard)
@@ -40,5 +55,47 @@ export class UserController {
         error.status,
       );
     }
+  }
+
+  @Post('create_user')
+  @ApiCreatedResponse({
+    description: 'User successfully logged in',
+  })
+  @ApiBody({
+    type: CreateUser,
+  })
+  @UseGuards(AccessTokenGuard, RoleGuard)
+  @RolesDecorator(RolesEnum.ADMIN)
+  async createUser(@Body() createUserDto: CreateUser): Promise<User> {
+    try {
+      const user = await this.userService.createUser(createUserDto);
+      return user;
+    } catch (error) {
+      throw new HttpException(
+        {
+          status: error?.status || 500,
+          errors: {
+            message: error?.message,
+          },
+        },
+        error.status,
+      );
+    }
+  }
+
+  @OnEvent('user.created')
+  handleUserCreatedEvent(payload: UserCreatedEvent) {
+    console.log(
+      'UserCreatedEvent',
+      payload.id,
+      payload.username,
+      payload.email,
+      payload.createdAt,
+    );
+
+    const { id, username, email, createdAt } = payload;
+
+    //add this redis que to send email
+    this.userService.sendEmail(id, username, email, createdAt);
   }
 }
