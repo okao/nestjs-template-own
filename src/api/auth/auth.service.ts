@@ -34,61 +34,73 @@ export class AuthService {
   }
 
   validateLogin = async (signin: SignIn) => {
-    const user = await this.prisma.user.findFirst({
-      where: {
-        email: {
-          contains: signin.email,
-        },
-      },
-    });
-
-    if (!user) {
-      throw new HttpException(
-        {
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            email: 'notFound',
+    try {
+      const user = await this.prisma.user.findFirst({
+        where: {
+          email: {
+            contains: signin.email,
           },
         },
-        HttpStatus.UNPROCESSABLE_ENTITY,
-      );
-    }
-
-    const isValidPassword = await bcrypt.compare(
-      signin.password,
-      user.password,
-    );
-
-    //make user with only email, username, id
-    const passedUser: { id: string; username: string; email: string } = {
-      id: user?.id,
-      username: user?.username,
-      email: user?.email,
-    };
-
-    if (!isValidPassword) {
-      throw new HttpException(
-        {
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            password: 'incorrectPassword',
-          },
-        },
-        HttpStatus.UNPROCESSABLE_ENTITY,
-      );
-    }
-
-    const { token, refreshToken, tokenExpiresIn, refreshTokenExpiresIn } =
-      await this.getTokensData({
-        id: user?.id,
       });
 
-    return {
-      token,
-      refreshToken,
-      tokenExpiresIn,
-      user: passedUser,
-    };
+      if (!user) {
+        throw new HttpException(
+          {
+            status: HttpStatus.UNAUTHORIZED,
+            errors: {
+              message: 'Ivalid Credentials',
+            },
+          },
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
+
+      const isValidPassword = await bcrypt.compare(
+        signin.password,
+        user.password,
+      );
+
+      //make user with only email, username, id
+      const passedUser: { id: string; username: string; email: string } = {
+        id: user?.id,
+        username: user?.username,
+        email: user?.email,
+      };
+
+      if (!isValidPassword) {
+        throw new HttpException(
+          {
+            status: HttpStatus.UNAUTHORIZED,
+            errors: {
+              message: 'Ivalid Credentials',
+            },
+          },
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
+
+      const { token, refreshToken, tokenExpiresIn, refreshTokenExpiresIn } =
+        await this.getTokensData({
+          id: user?.id,
+        });
+
+      return {
+        token,
+        refreshToken,
+        tokenExpiresIn,
+        user: passedUser,
+      };
+    } catch (error) {
+      throw new HttpException(
+        {
+          status: HttpStatus.UNAUTHORIZED,
+          errors: {
+            message: 'Unable to Authenticate',
+          },
+        },
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
   };
 
   async refreshToken(userId: string, refreshTokenString: string) {
@@ -104,7 +116,7 @@ export class AuthService {
           {
             status: HttpStatus.UNPROCESSABLE_ENTITY,
             errors: {
-              email: 'notFound',
+              message: 'Ivalid Credentials',
             },
           },
           HttpStatus.UNPROCESSABLE_ENTITY,
@@ -136,7 +148,14 @@ export class AuthService {
         user: passedUser,
       };
     } catch (error) {
-      throw new UnauthorizedException('Unauthorized');
+      // throw new UnauthorizedException('Unauthorized');
+
+      throw new UnauthorizedException({
+        status: HttpStatus.UNAUTHORIZED,
+        errors: {
+          message: 'Unauthorized',
+        },
+      });
     }
   }
 

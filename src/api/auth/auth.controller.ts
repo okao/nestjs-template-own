@@ -58,20 +58,8 @@ export class AuthController {
       user: PassedUserAuth;
     }>
   > {
-    try {
-      const login = await this.authService.validateLogin(signin);
-      return login;
-    } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          errors: {
-            message: error.message,
-          },
-        },
-        error.status,
-      );
-    }
+    const login = await this.authService.validateLogin(signin);
+    return login;
   }
 
   //token refresh
@@ -95,23 +83,11 @@ export class AuthController {
       user: PassedUserAuth;
     }>
   > {
-    try {
-      const refresh = await this.authService.refreshToken(
-        req?.user?.id,
-        refreshToken.refreshToken,
-      );
-      return refresh;
-    } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          errors: {
-            message: error.message,
-          },
-        },
-        error.status,
-      );
-    }
+    const refresh = await this.authService.refreshToken(
+      req?.user?.id,
+      refreshToken.refreshToken,
+    );
+    return refresh;
   }
 
   @UseGuards(AccessTokenGuard)

@@ -16,7 +16,7 @@ export class InterceptorRequestAssociateNeededTsInterceptor
   );
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    console.log('InterceptorRequestAssociateNeededTsInterceptor');
+    // console.log('InterceptorRequestAssociateNeededTsInterceptor');
     const request = context.switchToHttp().getRequest();
     //get the user from the request object
     const user = request?.user;

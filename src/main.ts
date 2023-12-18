@@ -56,7 +56,7 @@ async function bootstrap() {
 
     // app.use(compression());
     app.useGlobalInterceptors(new LoggingInterceptor());
-    // app.useGlobalFilters(new HttpExceptionFilter());
+    app.useGlobalFilters(new HttpExceptionFilter());
 
     // Swagger
     const config = new DocumentBuilder()

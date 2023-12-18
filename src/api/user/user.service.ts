@@ -10,6 +10,11 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { USER_CREATED_QUEUE } from './consumer.constants';
+import { QueueService } from 'src/queue_manager/queue.service';
+import {
+  IinitilQueue,
+  SendEmailQueue,
+} from 'src/queue_manager/queue.constants';
 
 @Injectable()
 export class UserService {
@@ -17,6 +22,7 @@ export class UserService {
     private configService: ConfigService,
     private prisma: PrismaService,
     private readonly eventEmitter: EventEmitter2,
+    private queueService: QueueService,
     @InjectQueue(USER_CREATED_QUEUE) private readonly userQueue: Queue,
   ) {}
 
@@ -82,6 +88,29 @@ export class UserService {
     });
 
     this.eventEmitter.emit('user.created', createUser);
+
+    // this.queueService.addJob({
+    //   name: IinitilQueue.name,
+    //   data: {
+    //     id: createUser.id,
+    //     username: createUser.username,
+    //     email: createUser.email,
+    //     createdAt: createUser.createdAt,
+    //   },
+    // });
+
+    //meaning attempt for 50 times for every 10 seconds
+    //remove after complete
+    this.queueService.addJob({
+      name: SendEmailQueue.name,
+      data: createUser,
+      options: {
+        delay: 9000,
+        removeOnComplete: false,
+        removeOnFail: false,
+        attempts: 1,
+      },
+    });
 
     delete createUser.password;
     delete createUser.defaultAuthProviderId;

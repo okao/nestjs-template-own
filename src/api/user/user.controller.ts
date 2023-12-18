@@ -96,6 +96,6 @@ export class UserController {
     const { id, username, email, createdAt } = payload;
 
     //add this redis que to send email
-    this.userService.sendEmail(id, username, email, createdAt);
+    // this.userService.sendEmail(id, username, email, createdAt);
   }
 }

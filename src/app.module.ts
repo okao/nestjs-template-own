@@ -16,33 +16,48 @@ import { APP_GUARD } from '@nestjs/core';
 import { PrismaModule } from './service_modules/prisma/prisma.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { BullModule } from '@nestjs/bull';
+// import { BullModule } from '@nestjs/bull';
 // import { RedisCacheModule } from './redis-cache/redis-cache.module';
 // import { forwardRef } from '@nestjs/common';
+import { QueueModule } from './queue_manager/queue.module';
+import { BullBoardModule } from '@bull-board/nestjs';
+import { ExpressAdapter } from '@bull-board/express';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports: [
-    ThrottlerModule.forRoot([
-      {
-        name: 'auth',
-        ttl: 60,
-        limit: 10,
-      },
-    ]),
+    // ThrottlerModule.forRoot([
+    //   {
+    //     name: 'auth',
+    //     ttl: 60,
+    //     limit: 10,
+    //   },
+    // ]),
     JwtModule.register({
       global: true,
     }),
     //for Queing jobs
     BullModule.forRootAsync({
       imports: [ConfigModule],
+      // useFactory: async (configService: ConfigService) => ({
+      //   global: true,
+      //   redis: {
+      //     host: await configService.get('redis.host'),
+      //     port: await configService.get('redis.port'),
+      //   },
+      // }),
       useFactory: async (configService: ConfigService) => ({
         global: true,
-        redis: {
+        connection: {
           host: await configService.get('redis.host'),
           port: await configService.get('redis.port'),
         },
       }),
       inject: [ConfigService],
+    }),
+    BullBoardModule.forRoot({
+      route: '/queues',
+      adapter: ExpressAdapter,
     }),
     PrismaModule,
     ScheduleModule.forRoot(),
@@ -87,6 +102,12 @@ import { BullModule } from '@nestjs/bull';
     DashboardModule,
     SettingModule,
     GatewayModule,
+    QueueModule.register(),
+    // QueueModule,
+    // BullBoardModule.forRoot({
+    //   route: '/queue',
+    //   adapter: ExpressAdapter,
+    // }),
   ],
   controllers: [],
   providers: [],
