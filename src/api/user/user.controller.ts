@@ -34,6 +34,17 @@ import { UserCreatedEvent } from 'src/events/user-created.event';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { FileUploadFileTypeValidator } from '../../validators/file.validator';
 import { diskStorage } from 'multer';
+import {
+  S3Client,
+  ListBucketsCommand,
+  ListObjectsV2Command,
+  GetObjectCommand,
+  PutObjectCommand,
+  GetObjectCommandInput,
+} from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+
+// import * as AWS from 'aws-sdk';
 
 const MAX_FILE_UPLOAD_SIZE_IN_BYTES = 100 * 1024 * 1024; // 2 MB
 const VALID_UPLOADS_MIME_TYPES = [
@@ -41,6 +52,11 @@ const VALID_UPLOADS_MIME_TYPES = [
   'application/vnd.ms-excel',
   'text/plain',
 ];
+
+const ACCOUNT_ID = '48524e625f2538ce02ef9fd66b1e5e0e';
+const ACCESS_KEY_ID = '5bc501ad58949974c708d68252b6b3da';
+const SECRET_ACCESS_KEY =
+  '9c84c677ca8a94179c0db4e9b3b475a787be7d22daf79d8eaefb733178ae43d4';
 
 @ApiHeader({
   name: 'User API',
@@ -50,6 +66,21 @@ const VALID_UPLOADS_MIME_TYPES = [
 @ApiBearerAuth()
 @Controller('user')
 export class UserController {
+  // private readonly s3Client = new S3Client({
+  //   region: 'us-east-1',
+  // });
+  private readonly S3Bucket = new S3Client({
+    region: 'auto',
+    endpoint: `https://${ACCOUNT_ID}.r2.cloudflarestorage.com`,
+    credentials: {
+      accessKeyId: ACCESS_KEY_ID,
+      secretAccessKey: SECRET_ACCESS_KEY,
+    },
+    // signatureVersion: 'v4',
+    // s3ForcePathStyle: true,
+    // signatureVersion: 'v4',
+  });
+
   constructor(
     private readonly userService: UserService,
     private readonly prisma: PrismaService,
@@ -220,21 +251,69 @@ export class UserController {
     : Express.Multer.File[],
   ): Promise<any> {
     try {
-      console.log('file', files);
+      // console.log('file', files);
       // const { originalname, buffer, fieldname, encoding, mimetype, size } =
       //   files;
 
       const response = [];
-      files.forEach((file) => {
-        const { originalname, mimetype, size, filename } = file;
+      files.forEach(async (file) => {
+        const { originalname, mimetype, size, filename, buffer } = file;
         const fileObj = {
           originalname,
           mimetype,
           size,
           filename,
+          buffer,
         };
         response.push(fileObj);
+
+        // await this.S3Bucket.send(
+        //   new PutObjectCommand({
+        //     Bucket: 'okao',
+        //     Key: filename,
+        //     Body: buffer,
+        //   }),
+        // );
+
+        await this.S3Bucket.send(
+          new PutObjectCommand({
+            Bucket: 'okao',
+            Key: filename,
+            Body: buffer,
+          }),
+        );
       });
+
+      return response;
+    } catch (error) {
+      console.log('error', error);
+    }
+  }
+
+  //get all files
+  @Get('files')
+  async getFiles(): Promise<any> {
+    try {
+      // const response = await this.S3Bucket.send(
+      //   // new ListBucketsCommand({
+      //   //   Bucket: 'okao',
+      //   // }),
+      //   new GetObjectCommand({
+      //     Bucket: 'okao',
+      //     Key: '59fb7bd9c126f89fd7a14a7993d7d8c1Screenshot 2023-10-23 at 16.24.08.png',
+      //   }),
+      // );
+
+      const response = await getSignedUrl(
+        this.S3Bucket,
+        new GetObjectCommand({
+          Bucket: 'okao',
+          Key: '59fb7bd9c126f89fd7a14a7993d7d8c1Screenshot 2023-10-23 at 16.24.08.png',
+        }),
+        { expiresIn: 360000 },
+      );
+
+      console.log('response', response);
 
       return response;
     } catch (error) {

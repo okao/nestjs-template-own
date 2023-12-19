@@ -28,6 +28,8 @@
     "db-dev": "docker-compose -f docker-compose.yml up -d"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.476.0",
+    "@aws-sdk/s3-request-presigner": "^3.476.0",
     "@bull-board/api": "^5.10.2",
     "@bull-board/express": "^5.10.2",
     "@bull-board/nestjs": "^5.10.2",
@@ -49,6 +51,7 @@
     "@prisma/client": "^5.7.0",
     "@tsed/ioredis": "^7.52.0",
     "@types/bull": "^4.10.0",
+    "aws-sdk": "^2.1521.0",
     "bcrypt": "^5.1.1",
     "bull": "^4.11.5",
     "cache-manager": "^5.3.1",
