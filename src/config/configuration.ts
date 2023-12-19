@@ -2,6 +2,7 @@ export default () => ({
   port: parseInt(process.env.PORT, 10) || 3000,
   apiPrefix: process.env.API_PREFIX || 'api',
   database: {
+    provider: process.env.DATABASE_PROVIDER || 'postgres',
     host: process.env.DATABASE_HOST || 'localhost',
     port: parseInt(process.env.DATABASE_PORT, 10) || 5432,
     url:
@@ -15,7 +16,7 @@ export default () => ({
     encryption_key: process.env.REDIS_ENCRYPTION_KEY || 'encryption_key',
   },
   cors: {
-    origin: process.env.CORS_ORIGIN || '*',
+    origin: [process.env.CORS_ORIGIN || 'http://localhost:3000'],
   },
   auth: {
     accessTokenExpiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN || '5m',

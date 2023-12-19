@@ -6,6 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import { ConfigTypes } from './config/configuration.type';
 import {
   ClassSerializerInterceptor,
+  Logger,
   ValidationPipe,
   VersioningType,
 } from '@nestjs/common';
@@ -17,7 +18,6 @@ import { InterceptorRequestAssociateNeededTsInterceptor } from './interceptors/i
 
 async function bootstrap() {
   try {
-    console.log('process.env.NODE_ENV: ', process.env.PORT);
     const app = await NestFactory.create(AppModule);
     useContainer(app.select(AppModule), { fallbackOnErrors: true });
     const configService = app.get(ConfigService<ConfigTypes>);

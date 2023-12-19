@@ -27,10 +27,15 @@ export class RoleGuard implements CanActivate {
     let hasRole = false;
     requiredRoles.forEach((role) => {
       console.log('role', role);
-      console.log('user.role', user?.role?.name);
-      if (role === user?.role?.name) {
-        hasRole = true;
-      }
+      console.log('user.roles', user?.roles);
+      // if (role === user?.role?.name) {
+      //   hasRole = true;
+      // }
+      user?.roles?.forEach((usersRole) => {
+        if (role === usersRole?.role?.name) {
+          hasRole = true;
+        }
+      });
     });
 
     console.log('hasRole', hasRole);

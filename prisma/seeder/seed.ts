@@ -222,12 +222,26 @@ async function main() {
           name: 'active',
         },
       },
-      role: {
-        connect: {
-          name: 'admin',
-        },
-      },
     },
+    include: {
+      roles: true,
+      status: true,
+    },
+  });
+
+  //add roles to user
+  await prisma.userRole.createMany({
+    data: [
+      {
+        userId: users.id,
+        roleId: (await prisma.role.findFirst({ where: { name: 'user' } })).id,
+      },
+      {
+        userId: users.id,
+        roleId: (await prisma.role.findFirst({ where: { name: 'admin' } })).id,
+      },
+    ],
+    skipDuplicates: true,
   });
 
   console.log({

@@ -12,7 +12,7 @@ export class PrismaService
     super({
       datasources: {
         db: {
-          url: configService.get<string>('DATABASE_URL'),
+          url: configService.get<string>('POSTGRES_URL'),
         },
       },
     });

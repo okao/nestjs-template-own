@@ -9,7 +9,7 @@
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
-    "start:dev": "nest start --watch",
+    "start:dev": "concurrently \"npm run db-dev\" \"nest start --watch\"",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
@@ -19,11 +19,13 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "migrate": "prisma migrate dev --name init",
-    "migrate:rollback": "prisma migrate reset --force",
+    "migrate:rollback": "prisma migrate dev rollback --name init",
+    "migrate:reset": "prisma migrate reset --force",
     "generate": "prisma generate",
     "studio": "prisma studio",
     "prisma": "npx prisma",
-    "seed": "npx prisma db seed"
+    "seed": "npx prisma db seed",
+    "db-dev": "docker-compose -f docker-compose.yml up -d"
   },
   "dependencies": {
     "@bull-board/api": "^5.10.2",

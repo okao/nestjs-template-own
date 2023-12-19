@@ -7,8 +7,10 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  // provider = "mysql"
+  // url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("POSTGRES_URL")
 }
 
 model SiteSetting {
@@ -48,7 +50,7 @@ model Role {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  users User[]
+  users UserRole[]
 
   @@map("roles")
 }
@@ -85,6 +87,7 @@ model AuthProvider {
 
   users UserAuthProvider[]
 
+
   @@map("authProviders")
 }
 
@@ -94,17 +97,27 @@ model User {
   username              String?  @unique
   password              String?
   statusId              Int      @default(1)
-  roleId                Int      @default(1)
   defaultAuthProviderId Int      @default(1)
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
   status        Status             @relation(fields: [statusId], references: [id])
-  role          Role               @relation(fields: [roleId], references: [id])
   sessions      Session[]
   authProviders UserAuthProvider[]
+  roles         UserRole[]
 
   @@map("users")
+}
+
+model UserRole {
+  userId String
+  roleId Int
+
+  user User @relation(fields: [userId], references: [id])
+  role Role @relation(fields: [roleId], references: [id])
+
+  @@id([userId, roleId])
+  @@map("user_roles")
 }
 
 model UserAuthProvider {

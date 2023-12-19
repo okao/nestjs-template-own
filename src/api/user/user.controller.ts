@@ -83,6 +83,79 @@ export class UserController {
     }
   }
 
+  //testing controller
+  @Get('test')
+  async test(): Promise<any> {
+    try {
+      // const createUserWithRoles = async () => {
+      //   await this.prisma
+      //     .$executeRaw`SELECT * from "nestjs-template".create_user_with_roles(
+      //         'e1ea56d6-5f75-4fe3-a8cf-b8e73199310f',
+      //         'hamzathanees8@gmail.com',
+      //         'okao8',
+      //         'password123',
+      //         1,
+      //         1,
+      //         '2023-12-19 12:34:56'::TIMESTAMP,
+      //         ARRAY[
+      //             '{"role": {"id": 1}}'::JSON,
+      //             '{"role": {"id": 2}}'::JSON
+      //         ]
+      //     );`;
+
+      //   const resultQ = await this.prisma.user.findMany({
+      //     where: {
+      //       id: 'e1ea56d6-5f75-4fe3-a8cf-b8e73199310f',
+      //     },
+      //     include: {
+      //       // Include any other fields you want to retrieve
+      //       roles: {
+      //         include: {
+      //           role: true,
+      //         },
+      //       },
+      //     },
+      //   });
+
+      //   return resultQ;
+      // };
+
+      const createUserWithRoles = async () => {
+        const results = await this.prisma.$queryRaw<
+          any[]
+        >`SELECT "nestjs-template".create_user_with_roles(
+    'hamzathanees13@gmail.com',
+    'hamzathanees13',
+    'password123',
+    1,
+    1,
+    '2023-12-19 12:34:56'::TIMESTAMP,
+    ARRAY[
+        '{"role": {"id": 1}}'::JSON,
+        '{"role": {"id": 2}}'::JSON
+    ]
+)`;
+
+        return results;
+      };
+
+      const result2 = await createUserWithRoles();
+
+      return result2;
+    } catch (error) {
+      console.log('error', error);
+      throw new HttpException(
+        {
+          status: error?.status || 500,
+          errors: {
+            message: error?.message,
+          },
+        },
+        error.status,
+      );
+    }
+  }
+
   @OnEvent('user.created')
   handleUserCreatedEvent(payload: UserCreatedEvent) {
     console.log(

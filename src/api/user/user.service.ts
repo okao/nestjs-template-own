@@ -76,14 +76,24 @@ export class UserService {
         username,
         email,
         password: hashedPassword,
-        role: {
-          connect: {
-            name: role,
-          },
+        roles: {
+          create: [
+            {
+              role: {
+                connect: {
+                  name: role,
+                },
+              },
+            },
+          ],
         },
       },
       include: {
-        role: true,
+        roles: {
+          select: {
+            role: true,
+          },
+        },
       },
     });
 
@@ -114,14 +124,20 @@ export class UserService {
 
     delete createUser.password;
     delete createUser.defaultAuthProviderId;
-    delete createUser.roleId;
     delete createUser.statusId;
     delete createUser.createdAt;
     delete createUser.updatedAt;
-    delete createUser.role.createdAt;
-    delete createUser.role.updatedAt;
-    delete createUser.role.id;
-    delete createUser.role.defaultType;
+    // delete createUser.role.createdAt;
+    // delete createUser.role.updatedAt;
+    // delete createUser.role.id;
+    // delete createUser.role.defaultType;
+    createUser.roles.map((role_delete) => {
+      delete role_delete.role.createdAt;
+      delete role_delete.role.updatedAt;
+      delete role_delete.role.id;
+      delete role_delete.role.defaultType;
+      return role_delete;
+    });
 
     return createUser;
   }
