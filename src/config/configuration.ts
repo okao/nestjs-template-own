@@ -6,8 +6,9 @@ export default () => ({
     host: process.env.DATABASE_HOST || 'localhost',
     port: parseInt(process.env.DATABASE_PORT, 10) || 5432,
     url:
-      process.env.DATABASE_URL ||
-      'postgres://postgres:postgres@localhost:5432/postgres',
+      process.env.POSTGRES_URL ||
+      // 'postgres://postgres:postgres@localhost:5432/postgres',
+      'postgres://postgres:postgres@localhost:5432/postgres?schema=public',
   },
   redis: {
     host: process.env.REDIS_HOST || 'localhost',

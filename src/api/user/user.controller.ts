@@ -5,7 +5,9 @@ import {
   HttpException,
   Inject,
   Post,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { UserService } from './user.service';
@@ -25,6 +27,7 @@ import { AccessTokenGuard } from 'src/api/auth/guards/accessToken.guard';
 import { RoleGuard } from '../auth/guards/roles.guard';
 import { OnEvent } from '@nestjs/event-emitter';
 import { UserCreatedEvent } from 'src/events/user-created.event';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiHeader({
   name: 'User API',
@@ -139,9 +142,11 @@ export class UserController {
         return results;
       };
 
-      const result2 = await createUserWithRoles();
+      // const result2 = await createUserWithRoles();
 
-      return result2;
+      // return result2;
+
+      return 'testig';
     } catch (error) {
       console.log('error', error);
       throw new HttpException(
@@ -153,6 +158,18 @@ export class UserController {
         },
         error.status,
       );
+    }
+  }
+
+  //testing file upload
+  @Post('upload')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadFile(@UploadedFile() file): Promise<any> {
+    try {
+      console.log('file', file);
+      return file;
+    } catch (error) {
+      console.log('error', error);
     }
   }
 
