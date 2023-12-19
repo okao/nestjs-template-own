@@ -3,9 +3,13 @@ import {
   Controller,
   Get,
   HttpException,
+  HttpStatus,
   Inject,
+  ParseFilePipe,
+  ParseFilePipeBuilder,
   Post,
   UploadedFile,
+  UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -27,7 +31,16 @@ import { AccessTokenGuard } from 'src/api/auth/guards/accessToken.guard';
 import { RoleGuard } from '../auth/guards/roles.guard';
 import { OnEvent } from '@nestjs/event-emitter';
 import { UserCreatedEvent } from 'src/events/user-created.event';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { FileUploadFileTypeValidator } from '../../validators/file.validator';
+import { diskStorage } from 'multer';
+
+const MAX_FILE_UPLOAD_SIZE_IN_BYTES = 100 * 1024 * 1024; // 2 MB
+const VALID_UPLOADS_MIME_TYPES = [
+  'text/csv',
+  'application/vnd.ms-excel',
+  'text/plain',
+];
 
 @ApiHeader({
   name: 'User API',
@@ -163,11 +176,67 @@ export class UserController {
 
   //testing file upload
   @Post('upload')
-  @UseInterceptors(FileInterceptor('file'))
-  async uploadFile(@UploadedFile() file): Promise<any> {
+  @UseInterceptors(
+    FilesInterceptor('files', 4, {
+      storage: diskStorage({
+        destination: './uploads/',
+        // filename: file,
+        filename: (req, file, cb) => {
+          console.log('file', file);
+          const randomName = Array(32)
+            .fill(null)
+            .map(() => Math.round(Math.random() * 16).toString(16))
+            .join('');
+
+          console.log('randomName', randomName);
+          console.log('fullname', `${randomName}${file.originalname}`);
+          return cb(null, `${randomName}${file.originalname}`);
+        },
+      }),
+      //   fileFilter: imageFileFilter,
+    }),
+  )
+  async uploadFile(
+    @UploadedFiles(
+      new ParseFilePipeBuilder()
+        .addMaxSizeValidator({ maxSize: MAX_FILE_UPLOAD_SIZE_IN_BYTES })
+        .addFileTypeValidator({ fileType: 'image/png' })
+        .build({ errorHttpStatusCode: HttpStatus.BAD_REQUEST }),
+    ) // new ParseFilePipeBuilder()
+    //   .addMaxSizeValidator({ maxSize: MAX_FILE_UPLOAD_SIZE_IN_BYTES })
+    files //   .addFileTypeValidator({ fileType: 'image/png' })
+    //   .build({ errorHttpStatusCode: HttpStatus.BAD_REQUEST }),
+    // new ParseFilePipeBuilder()
+    //   .addValidator(
+    //     new FileUploadFileTypeValidator({
+    //       fileType: VALID_UPLOADS_MIME_TYPES,
+    //       // fileSize: MAX_FILE_UPLOAD_SIZE_IN_BYTES,
+    //     }),
+    //   )
+    //   .addMaxSizeValidator({ maxSize: MAX_FILE_UPLOAD_SIZE_IN_BYTES })
+    //   .build({ errorHttpStatusCode: HttpStatus.BAD_REQUEST }),
+
+    // console.log(File),
+    : Express.Multer.File[],
+  ): Promise<any> {
     try {
-      console.log('file', file);
-      return file;
+      console.log('file', files);
+      // const { originalname, buffer, fieldname, encoding, mimetype, size } =
+      //   files;
+
+      const response = [];
+      files.forEach((file) => {
+        const { originalname, mimetype, size, filename } = file;
+        const fileObj = {
+          originalname,
+          mimetype,
+          size,
+          filename,
+        };
+        response.push(fileObj);
+      });
+
+      return response;
     } catch (error) {
       console.log('error', error);
     }

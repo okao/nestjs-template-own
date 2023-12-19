@@ -23,6 +23,7 @@ import { QueueModule } from './queue_manager/queue.module';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { ExpressAdapter } from '@bull-board/express';
 import { BullModule } from '@nestjs/bullmq';
+import { DrizzleModule } from './drizzle/drizzle.module';
 
 @Module({
   imports: [
@@ -103,6 +104,7 @@ import { BullModule } from '@nestjs/bullmq';
     SettingModule,
     GatewayModule,
     QueueModule.register(),
+    DrizzleModule,
     // QueueModule,
     // BullBoardModule.forRoot({
     //   route: '/queue',

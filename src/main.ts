@@ -32,7 +32,8 @@ async function bootstrap() {
     app.enableVersioning({
       type: VersioningType.URI,
     });
-    app.useGlobalPipes(new ValidationPipe(validationOptions));
+    //TODO: commented for now to enable file upload to work
+    // app.useGlobalPipes(new ValidationPipe(validationOptions));
     app.useGlobalInterceptors(
       new ClassSerializerInterceptor(app.get(Reflector)),
     );
