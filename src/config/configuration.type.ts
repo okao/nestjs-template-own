@@ -24,4 +24,7 @@ export type ConfigTypes = {
     emailVerificationTokenLength: number;
     emailVerificationTokenPrefix: string;
   };
+  session: {
+    secret: string;
+  };
 };

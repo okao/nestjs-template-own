@@ -15,12 +15,68 @@ import helmet from 'helmet';
 import { LoggingInterceptor } from './libs/LoggingInterceptor';
 import { HttpExceptionFilter } from './libs/HttpExceptionFilter';
 import { InterceptorRequestAssociateNeededTsInterceptor } from './interceptors/interceptor_request_associate_needed.ts.interceptor';
+import createRedisStore from 'connect-redis';
+// import * as csurf from 'csurf';
+// import * as passport from 'passport';
+import * as session from 'express-session';
+import createClient from 'ioredis';
+import IORedis from 'ioredis';
+import RedisStore from 'connect-redis';
+import * as cookieParser from 'cookie-parser';
+import * as bodyParser from 'body-parser';
 
 async function bootstrap() {
   try {
     const app = await NestFactory.create(AppModule);
     useContainer(app.select(AppModule), { fallbackOnErrors: true });
     const configService = app.get(ConfigService<ConfigTypes>);
+    const client = new createClient({
+      host: configService.getOrThrow('redis.host', { infer: true }),
+      port: configService.getOrThrow('redis.port', { infer: true }),
+    });
+
+    client.on('error', (err) => {
+      Logger.error(err);
+    });
+
+    // app.use(csurf());
+
+    //Session
+    //pls ignore the error here as it is a bug in the library itself
+    // const RedisStoreSession = new RedisStore({ client: client });
+
+    app.use(
+      session({
+        secret: configService.getOrThrow('session.secret', { infer: true }),
+        resave: false,
+        saveUninitialized: false,
+        name: 'andyid',
+        cookie: {
+          httpOnly: true,
+          secure:
+            false /* configService.getOrThrow('session.secure', { infer: true }) */,
+          maxAge: 60000,
+        },
+        // store: RedisStoreSession,
+      }),
+    );
+
+    // app.use(
+    //   require('express-session')({
+    //     secret: configService.getOrThrow('session.secret', { infer: true }),
+    //     resave: false,
+    //     saveUninitialized: false,
+    //     cookie: {
+    //       maxAge: 60000,
+    //     },
+    //     store: new (require('connect-redis')(require('express-session')))({
+    //       host: configService.getOrThrow('redis.host', { infer: true }),
+    //       port: configService.getOrThrow('redis.port', { infer: true }),
+    //       client: require('redis').createClient(),
+    //       ttl: 86400,
+    //     }),
+    //   }),
+    // );
 
     app.enableShutdownHooks();
     app.setGlobalPrefix(
@@ -40,6 +96,10 @@ async function bootstrap() {
     // app.useGlobalInterceptors(
     //   new InterceptorRequestAssociateNeededTsInterceptor(),
     // );
+
+    app.use(cookieParser());
+    app.use(bodyParser.json());
+    app.use(bodyParser.urlencoded({ extended: true }));
 
     // Helmet
     app.use(

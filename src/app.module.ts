@@ -1,10 +1,10 @@
-import { Module } from '@nestjs/common';
+import { Inject, Module, NestModule } from '@nestjs/common';
 import { DashboardModule } from './api/dashboard/dashboard.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SettingModule } from './api/setting/setting.module';
 import configuration from './config/configuration';
 import { RouterModule } from '@nestjs/core';
-import { CacheModule } from '@nestjs/cache-manager';
+import { CACHE_MANAGER, CacheModule } from '@nestjs/cache-manager';
 import { GatewayModule } from './ws-gateway/gateway/gateway.module';
 // import * as redisStore from 'cache-manager-redis-store';
 import * as redisStore from 'cache-manager-redis-store';

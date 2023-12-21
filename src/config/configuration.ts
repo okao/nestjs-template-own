@@ -32,4 +32,7 @@ export default () => ({
     emailVerificationTokenPrefix:
       process.env.EMAIL_VERIFICATION_TOKEN_PREFIX || 'ev',
   },
+  session: {
+    secret: process.env.SESSION_SECRET || 'session-secret',
+  },
 });

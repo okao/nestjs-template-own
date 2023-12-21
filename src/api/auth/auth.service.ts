@@ -2,7 +2,7 @@ import { ConfigService } from '@nestjs/config';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { PrismaService } from 'src/service_modules/prisma/prisma.service';
 import { Cache } from 'cache-manager';
-import { SignIn } from '../../dtos/auth';
+import { SignIn, SignUp } from '../../dtos/auth';
 import {
   HttpException,
   HttpStatus,
@@ -35,11 +35,22 @@ export class AuthService {
 
   validateLogin = async (signin: SignIn) => {
     try {
+      let usersname = signin?.username;
+      //check if username or email exists in the request and merge them
+      if (!signin.username && signin.email) {
+        usersname = signin?.email;
+      }
+
       const user = await this.prisma.user.findFirst({
         where: {
-          email: {
-            contains: signin.email,
-          },
+          OR: [
+            {
+              email: usersname,
+            },
+            {
+              username: usersname,
+            },
+          ],
         },
       });
 
@@ -91,6 +102,7 @@ export class AuthService {
         user: passedUser,
       };
     } catch (error) {
+      console.log('error: ', error);
       throw new HttpException(
         {
           status: HttpStatus.UNAUTHORIZED,
@@ -99,6 +111,74 @@ export class AuthService {
           },
         },
         HttpStatus.UNAUTHORIZED,
+      );
+    }
+  };
+
+  validateSignup = async (signup: SignUp) => {
+    try {
+      const user = await this.prisma.user.findFirst({
+        where: {
+          OR: [
+            {
+              email: signup.email,
+            },
+            {
+              username: signup.username,
+            },
+          ],
+        },
+      });
+
+      if (user) {
+        throw new HttpException(
+          {
+            status: HttpStatus.UNPROCESSABLE_ENTITY,
+            errors: {
+              message: 'User already exists',
+            },
+          },
+          HttpStatus.UNPROCESSABLE_ENTITY,
+        );
+      }
+
+      const hashedPassword = await bcrypt.hash(signup.password, 10);
+
+      const newUser = await this.prisma.user.create({
+        data: {
+          username: signup.username,
+          email: signup.email,
+          password: hashedPassword,
+        },
+      });
+
+      const { token, refreshToken, tokenExpiresIn, refreshTokenExpiresIn } =
+        await this.getTokensData({
+          id: newUser?.id,
+        });
+
+      //make user with only email, username, id
+      const passedUser: { id: string; username: string; email: string } = {
+        id: newUser?.id,
+        username: newUser?.username,
+        email: newUser?.email,
+      };
+
+      return {
+        token,
+        refreshToken,
+        tokenExpiresIn,
+        user: passedUser,
+      };
+    } catch (error) {
+      throw new HttpException(
+        {
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          errors: {
+            message: 'Unable to create user',
+          },
+        },
+        HttpStatus.UNPROCESSABLE_ENTITY,
       );
     }
   };
