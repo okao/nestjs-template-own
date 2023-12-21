@@ -66,7 +66,7 @@ export class AuthController {
   any> {
     const login = await this.authService.validateLogin(signin);
     //add refresh token to cookie
-    //add refresh token to cookie
+    //add refresh token to cookie need to set the time from the config
     res?.cookie('andy-rft', login.refreshToken, {
       httpOnly: true,
       secure: false,
